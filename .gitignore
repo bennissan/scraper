@@ -1,5 +1,2 @@
 .gitignore
-.idea/misc.xml
-.idea/modules.xml
-.idea/scraper.iml
-.idea/workspace.xml
+.idea/

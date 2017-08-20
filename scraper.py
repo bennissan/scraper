@@ -5,7 +5,9 @@ import re
 
 sources = [{"name": "Breitbart",         "url": "http://breitbart.com/"},
            {"name": "The Daily Caller",  "url": "http://dailycaller.com/"},
-           {"name": "The Drudge Report", "url": "http://drudgereport.com/"}]
+           {"name": "The Drudge Report", "url": "http://drudgereport.com/"},
+           {"name": "The Daily Wire",    "url": "http://www.dailywire.com/"},
+           {"name": "National Review",   "url": "http://www.nationalreview.com/"}]
 
 codeWords = ["Jew", "Zionist", "Globalist", "Elite", "Rothschild", "\(\(\(.\)\)\)", "Reptilian",
              "New World Order", "Kabbal"]
