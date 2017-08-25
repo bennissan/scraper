@@ -1,26 +1,50 @@
 import requests
-import datetime
 import newspaper
 import re
 
 code_words = ["Jew", "Zionist", "Globalist", "Elite", "Rothschild", "\(\(\(.\)\)\)", "Reptilian",
-             "New World Order", "Kabbal"]
+              "New World Order", "Kabbal"]
 
-sources = [{"name": "Breitbart",         "url": "http://breitbart.com/"},
-           {"name": "The Daily Caller",  "url": "http://dailycaller.com/"},
-           {"name": "The Drudge Report", "url": "http://drudgereport.com/"},
-           {"name": "The Daily Wire",    "url": "http://www.dailywire.com/"},
-           {"name": "National Review",   "url": "http://www.nationalreview.com/"}]
-
-papers = [newspaper.build(source["url"], memoize_articles=False, fetch_images=False) for source in sources]
-newspaper.news_pool.set(papers, threads_per_source=10)
-newspaper.news_pool.join()
-
-today = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0))
+source_urls = ["http://breitbart.com/", "http://dailycaller.com/", "http://drudgereport.com/",
+               "http://www.dailywire.com/", "http://www.nationalreview.com/"]
 
 
-def is_article_from_today(article):
-    return article.publish_date == today
+def main():
+    sources = build_sources(source_urls)
+
+    for source in sources:
+        url, num_articles, count = scrape(source)
+        send_report(url, num_articles, count)
+
+
+def build_sources(urls):
+    sources = []
+
+    papers = [newspaper.build(url, fetch_images=False) for url in urls]
+    assert len(urls) == len(papers)
+
+    newspaper.news_pool.set(papers, threads_per_source=10)
+    newspaper.news_pool.join()
+
+    for i in range(len(urls)):
+        sources.append({"url": urls[i], "articles": papers[i].articles})
+
+    return sources
+
+
+def scrape(source):
+    url = source["url"]
+    articles = source["articles"]
+
+    num_articles = len(articles)
+    count = 0
+
+    for article in articles:
+        article.parse()
+        for code_word in code_words:
+            count += get_word_count_in_article(code_word, article)
+
+    return url, num_articles, count
 
 
 def get_word_count_in_article(word, article):
@@ -30,25 +54,9 @@ def get_word_count_in_article(word, article):
     return len(title_words) + len(text_words)
 
 
-def send_report(name, url, count):
-    report = {"value1": name, "value2": url, "value3": count}
+def send_report(url, num_articles, count):
+    report = {"value1": url, "value2": num_articles, "value3": count}
     requests.post("https://maker.ifttt.com/trigger/scraper/with/key/cAb2qiUvSxFnVBTj1dZ7dQ", data=report)
-
-
-def main():
-    for i in range(len(sources)):
-        name = sources[i]["name"]
-        url = sources[i]["url"]
-        count = 0
-        articles = papers[i].articles
-
-        for article in articles:
-            article.parse()
-            if is_article_from_today(article):
-                for code_word in code_words:
-                    count += get_word_count_in_article(code_word, article)
-
-        send_report(name, url, count)
 
 
 main()
